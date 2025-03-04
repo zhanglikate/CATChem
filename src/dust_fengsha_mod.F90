@@ -80,11 +80,11 @@ contains
        ilwi=1
 
     ! Total concentration at lowest model level. This is still hardcoded for 5 bins.
-    tc(1)=chem_arr(p_dust_1)*conver
-    tc(2)=chem_arr(p_dust_2)*conver
-    tc(3)=chem_arr(p_dust_3)*conver
-    tc(4)=chem_arr(p_dust_4)*conver
-    tc(5)=chem_arr(p_dust_5)*conver
+    tc(1)=max(1.e-20, chem_arr(p_dust_1)*conver)
+    tc(2)=max(1.e-20, chem_arr(p_dust_2)*conver)
+    tc(3)=max(1.e-20, chem_arr(p_dust_3)*conver)
+    tc(4)=max(1.e-20, chem_arr(p_dust_4)*conver)
+    tc(5)=max(1.e-20, chem_arr(p_dust_5)*conver)
 
     ! Air mass and density at lowest model level.
     airmas=area * delp / g
@@ -101,6 +101,9 @@ contains
              ! Total erodibility.
              
              if (isnan(ssm)) ssm=0.
+             if (isnan(clay)) clay=-1.
+             if (isnan(sand)) sand=-1.
+             if (isnan(rdrag)) rdrag=-1.
 
              erodtot = ssm ! SUM(erod(i,j,:))
              
@@ -136,8 +139,9 @@ contains
              endif
 
 
-             if ((ssm < 0.01) .or. (clay < 0.) &
-              .or. (sand < 0.) .or. (rdrag < 0.)) then
+             if ((ssm < 0.01) .or. (massfrac(1) < 0.) &
+              .or. (massfrac(2) < 0.) .or. (massfrac(3) < 0.) &
+              .or. (rdrag < 0.)) then
                 ilwi=0
              endif
 
@@ -501,7 +505,11 @@ contains
     vsat = 0.489 - 0.00126 * ( 100. * sandfrac )
 
 !  Gravimetric soil content
+    if (vsat .ne. 1. ) then
     soilMoistureConvertVol2Grav = vsoil * rhow / (rhop * (1. - vsat))
+    else
+    soilMoistureConvertVol2Grav =0.0
+    endif
 
   end function soilMoistureConvertVol2Grav
 !----------------------------------------------------------------
