@@ -357,8 +357,8 @@
   kind = kind_phys
   intent = inout
 [wetdep_ls_opt_in]
-  standard_name = catchem_wetdep_ls_opt
-  long_name = catchem large scale wet deposition option
+  standard_name = gocart_wetdep_ls_opt
+  long_name = gocart large scale wet deposition option
   units = index
   dimensions = ()
   type = integer
