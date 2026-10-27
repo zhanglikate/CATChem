@@ -51,7 +51,7 @@ contains
                    imp_physics, imp_physics_gfdl, imp_physics_thompson, &
                    rain_cplchm, rainc_cpl,rlat,                         &
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,  &
-                   w, dqdt, ntrac,ntchmdiag,                            &
+                   w, ntrac,ntchmdiag,                                  &
                    ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                     &
                    ntbc1,ntbc2,ntoc1,ntoc2,                             &
                    ntss1,ntss2,ntss3,ntss4,ntss5,                       &
@@ -76,7 +76,7 @@ contains
     real(kind_phys), dimension(im),     intent(in) :: rain_cplchm,rainc_cpl,rlat
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
-                us3d, vs3d, spechum, w, dqdt
+                us3d, vs3d, spechum, w
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
     real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: wetdpl
     integer,           intent(in) :: wetdep_ls_opt_in
@@ -84,7 +84,7 @@ contains
     integer,          intent(out) :: errflg
     integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_thompson
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy, u_phy, v_phy,       &
-                     p_phy, z_at_w, dz8w, p8w, t8w, rho_phy, vvel, dqdti
+                     p_phy, z_at_w, dz8w, p8w, t8w, rho_phy, vvel
 
     real(kind_phys), dimension(ims:im, jms:jme) :: rcav, rnav,xlat
 
@@ -146,9 +146,9 @@ contains
 !>- get ready for chemistry run
     call catchem_prep_wetdep(ktau,dtstep,                               &
         imp_physics, imp_physics_gfdl, imp_physics_thompson,            &
-        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w, dqdt,           &
+        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,                 &
         rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                   &
-        t8w,dqdti,z_at_w,vvel,rlat,xlat,                                &
+        t8w,z_at_w,vvel,rlat,xlat,                                      &
         ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                                &
         ntbc1,ntbc2,ntoc1,ntoc2,                                        &
         ntss1,ntss2,ntss3,ntss4,ntss5,                                  &
@@ -174,17 +174,9 @@ contains
         end do
 
       case (WDLS_OPT_NGAC)
-        do j=jts,jte
-          do i=its,ite
-            call WetRemovalGOCART(kts,kte, 1,1, dt,   &
-                               var_rmv(i,j,:),chem(i,:,j,:),    &
-                               p_phy(i,:,j),t_phy(i,:,j),       &
-                               rho_phy(i,:,j),dqdti(i,:,j),     &
-                               rcav(i,j),rnav(i,j),             &
-                               kms,kme)
-          enddo
-        enddo
-
+         errmsg = 'catchem_wetdep_wrapper_run: WDLS_OPT_NGAC is not available (requires dqdt)'
+         errflg = 1
+         return
          !if (chem_rc_check(localrc, msg="Failure in NGAC wet removal scheme", &
          !  file=__FILE__, line=__LINE__, rc=rc)) return
       case default
@@ -257,9 +249,9 @@ contains
 
   subroutine catchem_prep_wetdep(ktau,dtstep,                          &
         imp_physics, imp_physics_gfdl, imp_physics_thompson,           &
-        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,dqdt,           &
+        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,                &
         rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                  &
-        t8w,dqdti,z_at_w,vvel,rlat,xlat,                               &
+        t8w,z_at_w,vvel,rlat,xlat,                                     &
         ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                               &
         ntbc1,ntbc2,ntoc1,ntoc2,                                       &
         ntss1,ntss2,ntss3,ntss4,ntss5,                                 &
@@ -283,7 +275,7 @@ contains
     real(kind=kind_phys), dimension(ims:ime), intent(in) ::rlat
     real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) :: pr3d,ph3d
     real(kind=kind_phys), dimension(ims:ime, kts:kte), intent(in) ::       &
-         phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,dqdt
+         phl3d,tk3d,prl3d,us3d,vs3d,spechum,w
     real(kind=kind_phys), dimension(ims:ime, kts:kte,ntrac), intent(in) :: gq0
 
 
@@ -296,7 +288,7 @@ contains
     real(kind_phys), dimension(num_chem), intent(in) :: ppm2ugkg
     
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme), intent(out) ::              & 
-         rri, t_phy, u_phy, v_phy, p_phy, rho_phy, dz8w, p8w, t8w, vvel, dqdti
+         rri, t_phy, u_phy, v_phy, p_phy, rho_phy, dz8w, p8w, t8w, vvel
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme, 1:num_moist), intent(out) :: moist
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem),  intent(out) :: chem
 
@@ -320,7 +312,6 @@ contains
     p8w            = 0._kind_phys
     t8w            = 0._kind_phys
     vvel           = 0._kind_phys
-    dqdti          = 0._kind_phys
     moist          = 0._kind_phys  
     chem           = 0._kind_phys
     z_at_w         = 0._kind_phys
@@ -374,7 +365,6 @@ contains
           t_phy(i,k,j)=tk3d(ip,kkp)
           p_phy(i,k,j)=prl3d(ip,kkp)
           u_phy(i,k,j)=us3d(ip,kkp)
-          dqdti(i,k,j)=dqdt(ip,kkp)
           v_phy(i,k,j)=vs3d(ip,kkp)
           rho_phy(i,k,j)=p_phy(i,k,j)/(287.04*t_phy(i,k,j)*(1.+.608*spechum(ip,kkp)))
           rri(i,k,j)=1./rho_phy(i,k,j)
